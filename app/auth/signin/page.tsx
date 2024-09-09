@@ -23,12 +23,36 @@ import {
     handleCredentialsSignin,
     handleGithubSignin,
 } from "@/app/actions/authActions";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ErrorMessage from "@/components/error-message";
 import { Button } from "@/components/ui/button";
 
+import { useRouter, useSearchParams } from "next/navigation";
+
 export default function SignIn() {
+    const params = useSearchParams();
+    const error = params.get("error");
+    const router = useRouter();
+
     const [globalError, setGlobalError] = useState<string>("");
+
+    useEffect(() => {
+        if (error) {
+            switch (error) {
+                case "OAuthAccountNotLinked":
+                    setGlobalError(
+                        "Please use your email and password to sign in."
+                    );
+                    break;
+                default:
+                    setGlobalError(
+                        "An unexpected error occurred. Please try again."
+                    );
+            }
+        }
+        router.replace("/auth/signin");
+    }, [error, router]);
+
     const form = useForm<z.infer<typeof signInSchema>>({
         resolver: zodResolver(signInSchema),
         defaultValues: {
@@ -49,7 +73,7 @@ export default function SignIn() {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen p-4">
+        <div className="grow flex items-center justify-center p-4">
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="text-3xl font-bold text-center text-gray-800">
@@ -103,7 +127,9 @@ export default function SignIn() {
                             {/* Submit button will go here */}
                             <LoadingButton
                                 pending={form.formState.isSubmitting}
-                            />
+                            >
+                                Sign in
+                            </LoadingButton>
                         </form>
                     </Form>
 
